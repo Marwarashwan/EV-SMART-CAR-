@@ -88,3 +88,52 @@ A function/use/real-world-application breakdown of every part in the wiring sche
 - **Function:** The switched contacts (COM/NO) sit in series with the ignition or motor power line, so the relay can physically break that circuit.
 - **Use in this circuit:** Acts as an emergency stop — the microcontroller (or another safety trigger) can command the relay to cut motor power instantly.
 - **Real-life application:** This is the same principle behind an emergency stop (E-stop) button on industrial equipment and the kill switch on real EVs and go-karts — a hard, hardware-level way to remove power regardless of what software is doing.
+
+# Smart EV Explorer: Control & Sensing Backbone Schematic
+
+```mermaid
+graph TD
+    subgraph Power Generation & Regulation Bus
+        BAT["48V Traction Battery (+ / -)"] -->|Inline Master Safety Switch / Fuse| FUSE((Fuse / Switch))
+        FUSE -->|48V Main Bus| REG1["Step-Down Regulator 1 (48V to 12V)"]
+        FUSE -->|48V Main Bus| REG2["Step-Down Regulator 2 (48V to 5V)"]
+        
+        REG1 -->|12V Rail| AUX["Auxiliary / Lighting / Actuators"]
+        REG2 -->|5V Clean Rail| LOGIC["5V Logic & Sensor Rail"]
+        
+        BAT -.->|Battery Negative| GND["Common Ground (GND) Bus"]
+        REG1 -.->|12V GND| GND
+        REG2 -.->|5V GND| GND
+    end
+
+    subgraph Controllers & Compute Subsystems
+        JETSON["NVIDIA Jetson Orin Nano / NX\n(Powered from Isolated Clean Rail)"]
+        ARDUINO["Arduino Mega 2560\n(Powered via 5V Rail & Tied to GND)"]
+        
+        JETSON <==>|UART / USB Bridge Data Link| ARDUINO
+    end
+
+    subgraph Sensor Array Wiring
+        LIDAR["Slamtec RPLIDAR S3"] -->|Data Line| JETSON
+        
+        IMU["WitMotion WT901 IMU\n(Powered by 5V/3.3V & GND)"] -->|Serial Data TX/RX| ARDUINO
+        
+        US["Ultrasonic Distance Sensor (5V)\nVCC -> 5V | GND -> Common GND"] -->|Trigger Pin| ARDUINO_GPIO["Arduino GPIO (Trigger)"]
+        
+        US -->|Echo Pulse (5V)| DIV["Resistor Voltage Divider\n(1kΩ Series & 2kΩ Ground Resistor)"]
+        DIV -->|Stepped-Down 3.3V Echo| ARDUINO_ECHO["Arduino GPIO (Echo Input)"]
+    end
+
+    subgraph Safety Relay Circuit
+        RELAY["2-Channel Relay Module\n(Powered by 5V and Common GND)"]
+        MCU_GPIO["Microcontroller GPIO"] -->|Control Input (IN1)| RELAY
+        
+        MTR["High-Voltage Ignition / Motor Cut-Off"] ---|Wired Across Relay Contacts| RELAY
+    end
+
+    %% Ground Connections Styling & Bus Ties
+    LOGIC --> ARDUINO
+    LOGIC --> RELAY
+    LOGIC --> IMU
+    LOGIC --> US
+```
