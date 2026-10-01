@@ -91,13 +91,78 @@ A function/use/real-world-application breakdown of every part in the wiring sche
 
 # Smart EV Explorer: Control & Sensing Backbone Schematic
 
-# Smart EV Explorer: Control & Sensing Backbone Schematic
-
-```mermaid
 # Smart EV Explorer — System Wiring Diagram (Mermaid)
-
+ 
 Paste this into a GitHub `README.md` inside a mermaid code block. GitHub renders it automatically — no image upload needed.
-
+ 
+```mermaid
+flowchart TB
+    BATT["48V Traction Battery"]
+    SW["Master Switch + Fuse"]
+    REG1["Regulator 1<br/>48V → 12V"]
+    REG2["Regulator 2<br/>48V → 5V"]
+ 
+    JETSON["NVIDIA Jetson Orin<br/>Nano/NX"]
+    AUX["Aux Loads<br/>Lights + Actuators"]
+    ARDUINO["Arduino Mega 2560"]
+    RELAY["2-Channel Relay Module"]
+ 
+    LIDAR["Slamtec RPLIDAR S3"]
+    IMU["WitMotion WT901 IMU"]
+    ULTRA["Ultrasonic Sensor 5V"]
+    DIV["Voltage Divider<br/>1kΩ / 2kΩ → 3.3V"]
+ 
+    IGN["Ignition / Motor<br/>Cut-off Line"]
+    GND["Common GND Bus"]
+ 
+    BATT -->|"+48V"| SW
+    SW -->|"48V bus"| REG1
+    SW -->|"48V bus"| REG2
+ 
+    REG1 -->|"12V"| JETSON
+    REG1 -->|"12V"| AUX
+ 
+    REG2 -->|"5V"| ARDUINO
+    REG2 -->|"5V"| RELAY
+    REG2 -->|"5V"| ULTRA
+    REG2 -->|"5V"| IMU
+ 
+    JETSON <-->|"USB / UART"| ARDUINO
+    JETSON <-->|"USB"| LIDAR
+ 
+    IMU -->|"TX / RX"| ARDUINO
+    ULTRA -->|"TRIG"| ARDUINO
+    ULTRA -->|"ECHO"| DIV
+    DIV -->|"≈3.3V"| ARDUINO
+ 
+    ARDUINO -->|"GPIO → IN1"| RELAY
+    RELAY -->|"COM / NO contacts"| IGN
+ 
+    BATT -.->|"−"| GND
+    JETSON -.-> GND
+    ARDUINO -.-> GND
+    RELAY -.-> GND
+    ULTRA -.-> GND
+    IMU -.-> GND
+    LIDAR -.-> GND
+ 
+    classDef power fill:#D85A30,stroke:#4A1B0C,stroke-width:1px,color:#FAECE7;
+    classDef rail12 fill:#BA7517,stroke:#412402,stroke-width:1px,color:#FAEEDA;
+    classDef rail5 fill:#0F6E56,stroke:#04342C,stroke-width:1px,color:#E1F5EE;
+    classDef compute fill:#534AB7,stroke:#26215C,stroke-width:1px,color:#EEEDFE;
+    classDef sensor fill:#993556,stroke:#4B1528,stroke-width:1px,color:#FBEAF0;
+    classDef safety fill:#993C1D,stroke:#4A1B0C,stroke-width:1px,color:#FAECE7;
+    classDef ground fill:#5F5E5A,stroke:#2C2C2A,stroke-width:1px,color:#F1EFE8;
+ 
+    class BATT,SW power;
+    class REG1,AUX rail12;
+    class REG2,ARDUINO rail5;
+    class JETSON,LIDAR compute;
+    class IMU,ULTRA,DIV sensor;
+    class RELAY,IGN safety;
+    class GND ground;
+```
+ 
 ### Legend
 - 🟧 **Orange** — 48V power generation (battery, switch, fuse)
 - 🟤 **Amber** — 12V rail (auxiliary/lighting)
@@ -106,14 +171,10 @@ Paste this into a GitHub `README.md` inside a mermaid code block. GitHub renders
 - 🩷 **Pink** — sensor array (IMU, ultrasonic, divider)
 - 🟥 **Coral/red** — safety relay + switched ignition/motor line
 - ⬛ **Gray** — common ground bus (dashed lines = ground returns)
-
 ### Notes
 - Solid arrows = power or data flow; dashed arrows = ground returns.
 - Edit the `classDef` hex colors above to recolor each group — they're independent of node shape/text.
 - If GitHub's dark mode makes any text hard to read, swap a `classDef`'s `color:` value for a lighter/darker shade from the same family.
 - This is a **block/logical diagram**, not a true schematic with resistor/battery symbols — good for a README or portfolio, but check with your instructor before submitting it in place of the hand-drawn assignment.
-    LOGIC -.-> ARDUINO
-    LOGIC -.-> IMU
-    LOGIC -.-> US
-    LOGIC -.-> RELAY
-```
+ 
+
