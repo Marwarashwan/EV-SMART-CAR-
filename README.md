@@ -94,46 +94,24 @@ A function/use/real-world-application breakdown of every part in the wiring sche
 # Smart EV Explorer: Control & Sensing Backbone Schematic
 
 ```mermaid
-graph TD
-    subgraph Power Generation & Regulation Bus
-        BAT["48V Traction Battery"] -->|Master Safety Switch / Fuse| FUSE["Inline Fuse / Switch"]
-        FUSE -->|48V Main Bus| REG1["Step-Down Regulator 1 (48V to 12V)"]
-        FUSE -->|48V Main Bus| REG2["Step-Down Regulator 2 (48V to 5V)"]
-        
-        REG1 -->|12V Rail| AUX["Auxiliary / Lighting / Actuators"]
-        REG2 -->|5V Clean Rail| LOGIC["5V Logic & Sensor Rail"]
-        
-        BAT -.->|Battery Negative| GND["Common Ground Bus"]
-        REG1 -.->|12V GND| GND
-        REG2 -.->|5V GND| GND
-    end
+# Smart EV Explorer — System Wiring Diagram (Mermaid)
 
-    subgraph Controllers & Compute Subsystems
-        JETSON["NVIDIA Jetson Orin Nano / NX"]
-        ARDUINO["Arduino Mega 2560"]
-        
-        JETSON <-->|UART / USB Bridge| ARDUINO
-    end
+Paste this into a GitHub `README.md` inside a mermaid code block. GitHub renders it automatically — no image upload needed.
 
-    subgraph Sensor Array Wiring
-        LIDAR["Slamtec RPLIDAR S3"] -->|Data Line| JETSON
-        
-        IMU["WitMotion WT901 IMU"] -->|Serial Data TX/RX| ARDUINO
-        
-        US["Ultrasonic Distance Sensor (5V)"] -->|Trigger Pin| ARDUINO
-        
-        US -->|Echo Pulse 5V| DIV["Voltage Divider: 1k Ohm & 2k Ohm"]
-        DIV -->|Stepped Down 3.3V Echo| ARDUINO
-    end
+### Legend
+- 🟧 **Orange** — 48V power generation (battery, switch, fuse)
+- 🟤 **Amber** — 12V rail (auxiliary/lighting)
+- 🟩 **Teal** — 5V rail (logic/sensors)
+- 🟣 **Purple** — compute (Jetson, LiDAR via USB)
+- 🩷 **Pink** — sensor array (IMU, ultrasonic, divider)
+- 🟥 **Coral/red** — safety relay + switched ignition/motor line
+- ⬛ **Gray** — common ground bus (dashed lines = ground returns)
 
-    subgraph Safety Relay Circuit
-        RELAY["2-Channel Relay Module (5V)"]
-        ARDUINO -->|Control Line IN1| RELAY
-        
-        CUTOFF["High Voltage Motor Ignition Cut-Off"] --- RELAY
-    end
-
-    LOGIC -.-> JETSON
+### Notes
+- Solid arrows = power or data flow; dashed arrows = ground returns.
+- Edit the `classDef` hex colors above to recolor each group — they're independent of node shape/text.
+- If GitHub's dark mode makes any text hard to read, swap a `classDef`'s `color:` value for a lighter/darker shade from the same family.
+- This is a **block/logical diagram**, not a true schematic with resistor/battery symbols — good for a README or portfolio, but check with your instructor before submitting it in place of the hand-drawn assignment.
     LOGIC -.-> ARDUINO
     LOGIC -.-> IMU
     LOGIC -.-> US
