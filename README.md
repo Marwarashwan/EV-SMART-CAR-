@@ -176,5 +176,8 @@ flowchart TB
 - Edit the `classDef` hex colors above to recolor each group — they're independent of node shape/text.
 - If GitHub's dark mode makes any text hard to read, swap a `classDef`'s `color:` value for a lighter/darker shade from the same family.
 - This is a **block/logical diagram**, not a true schematic with resistor/battery symbols — good for a README or portfolio, but check with your instructor before submitting it in place of the hand-drawn assignment.
- 
+
+ # Block Diagram Of The System
+<img width="1415" height="710" alt="Screenshot 2026-10-04 at 11 22 46 am" src="https://github.com/user-attachments/assets/44d553c2-d1da-4bfb-9d30-fb5dd5e3a49a" />
+<img width="1144" height="865" alt="Screenshot 2026-10-04 at 11 22 12 am" src="https://github.com/user-attachments/assets/a0728fb1-d621-4702-9e22-5dce194adce2" />
 
