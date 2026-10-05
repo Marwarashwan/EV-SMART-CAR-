@@ -181,3 +181,71 @@ flowchart TB
 <img width="1415" height="710" alt="Screenshot 2026-10-04 at 11 22 46 am" src="https://github.com/user-attachments/assets/44d553c2-d1da-4bfb-9d30-fb5dd5e3a49a" />
 <img width="1144" height="865" alt="Screenshot 2026-10-04 at 11 22 12 am" src="https://github.com/user-attachments/assets/a0728fb1-d621-4702-9e22-5dce194adce2" />
 
+# Smart EV Explorer — Architecture v2 (post-discussion update)
+ 
+Your meeting notes translated into a clear spec, matching the two diagrams shown in chat.
+ 
+## What changed from the original design
+ 
+| Area | Before | Now | Why |
+|---|---|---|---|
+| Microcontroller | Arduino Mega 2560 | **Raspberry Pi 4** | Better, more flexible communication with the Jetson Orin (network/USB instead of basic UART), and enough headroom to run ROS nodes |
+| Sensors | LiDAR + IMU + ultrasonic | **+ Camera, + GPS** | Richer perception and outdoor localization |
+| Motor | No dedicated driver shown | **Motor driver added**, with its own isolated/filtered power supply | A motor driver needs clean, isolated power — its onboard regulator isn't reliable enough to also power your Pi/Jetson/sensors |
+| Safety | Relay only | **Hardware e-stop + software relay (two layers)** | The e-stop is a physical, code-independent cutoff; the relay is a software-triggered one for normal operation |
+| System extras | — | **Dashboard, data storage** | Monitoring and logging |
+ 
+## Power path (see "ev_explorer_power_v2" diagram)
+ 
+1. **48V battery → fuse → emergency stop switch.** This order matters: the fuse protects against overcurrent/shorts; the e-stop is a manual, instant, hardware-level cutoff that a person can hit regardless of what the software is doing.
+2. The e-stop output splits into **three independent branches**:
+   - **Motor branch:** an isolated, filtered regulator (or a separate dedicated power supply) feeds the motor driver, which drives the motor. Isolating/filtering this branch keeps the motor's inrush current and electrical noise from reaching your logic electronics.
+   - **12V branch:** Reg 1 feeds the Jetson Orin (check its actual input range, but Orin dev kits typically want 9–19V).
+   - **5V branch:** Reg 2 feeds the Raspberry Pi 4 and the relay.
+3. **Two-layer safety:**
+   - The **emergency stop** is upstream, cutting power to everything — including the motor driver's regulator — the moment someone hits it. This works even if the Pi or Jetson has frozen or crashed.
+   - The **relay**, driven by a Raspberry Pi GPIO pin, is a second, software-controlled cutoff wired into the motor driver's enable line. This lets your code disable the motor safely during normal operation (e.g., obstacle detected) without needing the hard e-stop.
+4. **Why the motor driver's onboard regulator isn't reused:** many motor driver boards include a small logic-level regulator meant only to power the driver chip's own control logic. It's not sized or isolated well enough to safely power a Pi, Jetson, and sensor array too — so those get their own dedicated 12V/5V rails instead.
+## Compute and sensor path (see "ev_explorer_compute_v2" diagram)
+ 
+- **Raspberry Pi 4 ↔ Jetson Orin:** communicate over serial or USB — more capable than the old Arduino UART link, and better suited to running ROS alongside the Jetson's perception stack.
+- **Jetson Orin:** connects to the **camera** and **RPLIDAR S3** (both typically USB or CSI), since it has the GPU horsepower for vision/mapping workloads.
+- **Raspberry Pi 4:** connects to the **IMU** and **GPS** over serial, handling lower-level sensor fusion and localization data.
+- **Dashboard:** connects to the Jetson (commonly over network/Wi-Fi) for live monitoring.
+- **Data storage:** attached to the Jetson for logging sensor/run data.
+## Protocols
+ 
+Your note "protocols depend on what we're looking for" is correct — pick based on the link's needs:
+- **UART/Serial** — simple, point-to-point (IMU, GPS to the Pi)
+- **USB** — higher bandwidth (camera, LiDAR to the Jetson)
+- **Ethernet/Wi-Fi** — for the dashboard and any networked ROS communication between the Pi and Jetson
+- **I2C/SPI** — only if you add simple sensors directly on GPIO pins later
+- **CAN bus** — worth considering later if you add more distributed nodes (common in real vehicles), but likely unnecessary at this project's scale
+## ROS software structure
+ 
+Your note maps to standard ROS workspace layout:
+ 
+```
+your_ws/
+└── src/
+    ├── motor_control_pkg/      ← one package
+    │   ├── nodes/              ← e.g. motor_driver_node, estop_monitor_node
+    │   └── ...
+    ├── perception_pkg/
+    │   ├── nodes/              ← e.g. camera_node, lidar_node
+    │   └── ...
+    ├── localization_pkg/
+    │   ├── nodes/              ← e.g. imu_node, gps_node
+    │   └── ...
+    └── dashboard_pkg/
+        └── nodes/              ← e.g. telemetry_publisher_node
+```
+ 
+- **Package** = a self-contained unit (its own folder, build files, and purpose — e.g. everything related to motor control).
+- **Node** = a single running process inside a package (e.g. the node that just reads the IMU and publishes its data).
+- **Modularity benefit:** you can build, run, and test each package independently — e.g. test the camera node without needing the motor driver running — which matches exactly what your note said about controlling/testing each package separately.
+## Notes on the diagrams
+ 
+- Both diagrams are block/logical diagrams for understanding the architecture — for your actual hand-drawn or KiCad schematic submission, you'd still draw real wires, pin numbers, and the resistor/relay symbols as before.
+- The motor driver's internal connections (power stage, PWM inputs from the Pi, current sense if your driver has it) aren't detailed here — tell me your exact motor driver model (e.g. L298N, BTS7960, a BLDC ESC) and I can add its real pinout.
+ 
