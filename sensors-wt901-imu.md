@@ -5,10 +5,6 @@ status: research complete — can be tested now, no Pi/Jetson required
 
 # WitMotion WT901 IMU
 
-## Why start here
-
-This is the one sensor in the whole build you can plug in and start getting real data from **today**, directly on your Mac — no Raspberry Pi, no Jetson, no finished VM required. It connects over USB-to-serial (via its included dongle or a TTL adapter), and your Mac already has everything needed to talk to a serial device.
-
 ## What it is
 
 A 9-axis IMU (accelerometer + gyroscope + magnetometer) that outputs orientation (roll/pitch/yaw), angular velocity, and acceleration. WitMotion sells it with either a USB dongle (easiest for a first test) or bare TTL pins (for wiring directly to a microcontroller/Pi later).
