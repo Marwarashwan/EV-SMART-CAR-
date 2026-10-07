@@ -4,9 +4,6 @@ status: research complete — can be tested now, no Pi/Jetson required
 ---
 
 # WitMotion WT901 IMU
-
-## What it is
-
 A 9-axis IMU (accelerometer + gyroscope + magnetometer) that outputs orientation (roll/pitch/yaw), angular velocity, and acceleration. WitMotion sells it with either a USB dongle (easiest for a first test) or bare TTL pins (for wiring directly to a microcontroller/Pi later).
 
 ## Wiring (for the real build, later)
