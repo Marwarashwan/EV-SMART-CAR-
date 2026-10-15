@@ -252,3 +252,39 @@ your_ws/
  <img width="1024" height="768" alt="EFA9F3DF-B115-4D83-8251-F6996F89F5B1_1_105_c" src="https://github.com/user-attachments/assets/a060d8d9-d079-4282-9383-c126bcac806e" />
 <img width="1024" height="768" alt="E3614ECC-D91A-446C-B8A4-8316110C4263_1_105_c" src="https://github.com/user-attachments/assets/ada28887-c75b-4b9e-b43f-c93f0897e88f" />
 
+## Server (Run On The Jetson)
+```python
+import socket
+
+HOST = "0.0.0.0"  # listen on all interfaces
+PORT = 5005
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen()
+    print(f"Jetson listening on port {PORT}...")
+    conn, addr = s.accept()
+    with conn:
+        print(f"Connected by {addr}")
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            print(f"Received: {data.decode()}")
+            conn.sendall(data)  # echo back
+```
+
+
+## Client (run on the Raspberry Pi):
+```python
+import socket
+
+JETSON_IP = "192.168.1.XX"  # replace with the Jetson's real IP
+PORT = 5005
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((JETSON_IP, PORT))
+    s.sendall(b"hello from the pi")
+    data = s.recv(1024)
+    print(f"Jetson replied: {data.decode()}")
+```
