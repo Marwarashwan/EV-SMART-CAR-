@@ -288,3 +288,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     data = s.recv(1024)
     print(f"Jetson replied: {data.decode()}")
 ```
+
+
+## GAZEBO TEST101: SETUP_ROVER_TEST
+ROS 2 + Gazebo: Autonomous Square-Path Test
+Created a Linux robotics environment on my MacBook (Ubuntu 26.04 on UTM virtual machine, ROS 2 Lyrical, Gazebo Jetty) and created my first ROS 2 package. In this example, a Python node is running on the ROS–Gazebo bridge that publishes velocity messages at 10 Hz to the simulated differential drive robot, and subscribes to its /odom stream and logs its location to a file as it drives a square. Similar command and feedback loop as with the Smart EV Explorer where commands would be sent to the motors via an Arduino Mega and feedback received from the IMU and LiDAR.
+<img width="400" height="260" alt="GAZEBO FINAL TEST101" src="https://github.com/user-attachments/assets/9e292c04-a891-4f64-9729-06b2b2c8c96f" />
